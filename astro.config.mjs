@@ -5,6 +5,7 @@ import svelte, { vitePreprocess } from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import sitemap from "@astrojs/sitemap";
+import node from "@astrojs/node";
 import cloudflarePages from "@astrojs/cloudflare";
 import edgeone from "@edgeone/astro";
 import vercel from "@astrojs/vercel";
@@ -40,13 +41,16 @@ const adapter = process.env.GITHUB_ACTIONS
         ? cloudflarePages()
         : (process.env.EDGEONE
             ? edgeone()
-            : vercel({ mode: "serverless" })));
+            : (process.env.VERCEL
+                ? vercel({ mode: "serverless" })
+                : node({ mode: "standalone" }))));
 
 // Ref: https://astro.build/config
 export default defineConfig({
     site: siteConfig.siteURL,
     base: "/",
     trailingSlash: "always",
+    output: "server",
     adapter: adapter,
     integrations: [
         decapCmsOauth({
