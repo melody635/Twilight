@@ -38,7 +38,7 @@ export function getNavLinkCategories(): string[] {
 export function getNavLinksByCategory(): Record<string, NavLink[]> {
     const grouped: Record<string, NavLink[]> = {};
     navLinksData.forEach(link => {
-        const category = link.category || '';
+        const category = link.category || 'uncategorized';
         if (!grouped[category]) {
             grouped[category] = [];
         }

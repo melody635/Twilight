@@ -199,6 +199,7 @@ export const en: Translation = {
     [Key.navigationExport]: "Export",
     [Key.navigationEmpty]: "No navigation links yet",
     [Key.navigationVisit]: "Visit",
+    [Key.navigationPinned]: "Pinned",
 
     // Friends Page
     [Key.friends]: "Friends",

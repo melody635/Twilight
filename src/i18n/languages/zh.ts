@@ -199,6 +199,7 @@ export const zh: Translation = {
     [Key.navigationExport]: "导出",
     [Key.navigationEmpty]: "暂无导航链接",
     [Key.navigationVisit]: "访问",
+    [Key.navigationPinned]: "置顶",
 
     // 友链页面
     [Key.friends]: "友链",

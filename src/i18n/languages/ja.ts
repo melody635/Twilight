@@ -199,6 +199,7 @@ export const ja: Translation = {
     [Key.navigationExport]: "エクスポート",
     [Key.navigationEmpty]: "ナビゲーションリンクがありません",
     [Key.navigationVisit]: "訪問",
+    [Key.navigationPinned]: "ピン留め",
 
     // 友達ページ
     [Key.friends]: "友達",

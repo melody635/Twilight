@@ -84,7 +84,7 @@ const allLinks = navLinksData;
                         <svg class="w-5 h-5 text-(--primary)" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"></path>
                         </svg>
-                        Pinned
+                        {i18n(I18nKey.navigationPinned)}
                     </h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {pinnedLinks.map(link => (
@@ -118,9 +118,9 @@ const allLinks = navLinksData;
             {allLinks.length > 0 ? (
                 <div id="nav-links-container">
                     {Object.entries(groupedLinks).map(([category, links]) => (
-                        <div class="nav-category-group mb-8" data-group-category={category || 'uncategorized'}>
+                        <div class="nav-category-group mb-8" data-group-category={category}>
                             <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200 mb-4">
-                                {category || i18n(I18nKey.navigationUncategorized)}
+                                {category === 'uncategorized' ? i18n(I18nKey.navigationUncategorized) : category}
                                 <span class="text-sm font-normal text-neutral-400 ml-2">({links.length})</span>
                             </h2>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

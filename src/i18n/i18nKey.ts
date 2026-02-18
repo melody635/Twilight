@@ -196,6 +196,7 @@ enum I18nKey {
     navigationExport = "navigationExport",
     navigationEmpty = "navigationEmpty",
     navigationVisit = "navigationVisit",
+    navigationPinned = "navigationPinned",
 
     // 友链页面
     friends = "friends",
