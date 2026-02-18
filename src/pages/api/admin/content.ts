@@ -19,7 +19,8 @@ const VALID_TYPES = [
 
 function safePath(baseDir: string, id: string): string | null {
   const resolved = path.resolve(baseDir, `${id}.json`);
-  if (!resolved.startsWith(baseDir + path.sep)) return null;
+  const normalizedBase = path.resolve(baseDir);
+  if (!resolved.startsWith(normalizedBase + path.sep) && resolved !== normalizedBase) return null;
   return resolved;
 }
 

@@ -10,7 +10,8 @@ const POSTS_DIR = path.join(process.cwd(), "src", "content", "posts");
 
 function safePath(id: string): string | null {
   const resolved = path.resolve(POSTS_DIR, `${id}.md`);
-  if (!resolved.startsWith(POSTS_DIR + path.sep)) return null;
+  const normalizedBase = path.resolve(POSTS_DIR);
+  if (!resolved.startsWith(normalizedBase + path.sep) && resolved !== normalizedBase) return null;
   return resolved;
 }
 
