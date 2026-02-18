@@ -191,6 +191,8 @@ navbar:
                     "Anime"
         - # 一级导航链接 - 好友 (预设)
             "Friends"
+        - # 一级导航链接 - 导航 (预设)
+            "Navigation"
         - # 一级导航链接 - 关于 (预设)
             "About"
 

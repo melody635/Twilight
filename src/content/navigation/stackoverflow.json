@@ -1,0 +1,9 @@
+{
+    "title": "Stack Overflow",
+    "url": "https://stackoverflow.com",
+    "icon": "mdi:stack-overflow",
+    "description": "Where developers learn, share, & build careers",
+    "category": "Development",
+    "pinned": false,
+    "tags": ["code", "Q&A"]
+}

@@ -188,6 +188,19 @@ export const ja: Translation = {
     [Key.animeEmpty]: "アニメデータなし",
     [Key.animeEmptyBangumi]: "Bangumiの設定またはネットワーク接続を確認してください",
 
+    // ナビゲーションページ
+    [Key.navigation]: "ナビゲーション",
+    [Key.navigationSubtitle]: "個人ナビゲーションとブックマーク",
+    [Key.navigationSearch]: "ナビゲーションリンクを検索...",
+    [Key.navigationAll]: "すべて",
+    [Key.navigationUncategorized]: "未分類",
+    [Key.navigationAddLink]: "リンクを追加",
+    [Key.navigationImportBookmarks]: "ブックマークをインポート",
+    [Key.navigationExport]: "エクスポート",
+    [Key.navigationEmpty]: "ナビゲーションリンクがありません",
+    [Key.navigationVisit]: "訪問",
+    [Key.navigationPinned]: "ピン留め",
+
     // 友達ページ
     [Key.friends]: "友達",
 

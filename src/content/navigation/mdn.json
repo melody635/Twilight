@@ -1,0 +1,9 @@
+{
+    "title": "MDN Web Docs",
+    "url": "https://developer.mozilla.org",
+    "icon": "mdi:language-html5",
+    "description": "Resources for developers, by developers",
+    "category": "Development",
+    "pinned": false,
+    "tags": ["docs", "web"]
+}

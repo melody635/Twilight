@@ -188,6 +188,19 @@ export const zh: Translation = {
     [Key.animeEmpty]: "暂无追番数据",
     [Key.animeEmptyBangumi]: "请检查 Bangumi 配置或网络连接",
 
+    // 个人导航页面
+    [Key.navigation]: "导航",
+    [Key.navigationSubtitle]: "我的个人导航与书签收藏",
+    [Key.navigationSearch]: "搜索导航链接...",
+    [Key.navigationAll]: "全部",
+    [Key.navigationUncategorized]: "未分类",
+    [Key.navigationAddLink]: "添加链接",
+    [Key.navigationImportBookmarks]: "导入书签",
+    [Key.navigationExport]: "导出",
+    [Key.navigationEmpty]: "暂无导航链接",
+    [Key.navigationVisit]: "访问",
+    [Key.navigationPinned]: "置顶",
+
     // 友链页面
     [Key.friends]: "友链",
 

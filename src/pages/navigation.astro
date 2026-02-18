@@ -1,0 +1,450 @@
+---
+import { LinkPresets } from "@constants/link-presets";
+import { LinkPreset } from "@/types/config";
+import { navLinksData, getNavLinksByCategory, getPinnedNavLinks, getNavLinkCategories } from "@utils/nav-links";
+import { i18n } from "@i18n/translation";
+import I18nKey from "@i18n/i18nKey";
+import GridLayout from "@layouts/grid.astro";
+import BackwardButton from "@components/backwardButton.astro";
+
+const pageTitle = LinkPresets[LinkPreset.Navigation].name;
+const pageDescription = LinkPresets[LinkPreset.Navigation].description;
+
+const pinnedLinks = getPinnedNavLinks();
+const categories = getNavLinkCategories();
+const groupedLinks = getNavLinksByCategory();
+const allLinks = navLinksData;
+---
+
+<GridLayout title={pageTitle} description={pageDescription}>
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-9 py-6 relative w-full">
+            <BackwardButton currentPath={Astro.url.pathname} />
+
+            <!-- Header -->
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+                    {pageTitle}
+                </h1>
+                {pageDescription && (
+                    <p class="text-neutral-600 dark:text-neutral-400">
+                        {pageDescription}
+                    </p>
+                )}
+            </header>
+
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input
+                        type="text"
+                        id="nav-search"
+                        placeholder={i18n(I18nKey.navigationSearch)}
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent transition-all duration-200"
+                    />
+                </div>
+            </div>
+
+            <!-- Toolbar: Import Bookmarks & Export -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button id="import-bookmarks-btn" class="nav-tool-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    {i18n(I18nKey.navigationImportBookmarks)}
+                </button>
+                <button id="export-btn" class="nav-tool-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    {i18n(I18nKey.navigationExport)}
+                </button>
+                <input type="file" id="bookmark-file-input" accept=".html,.htm" class="hidden" />
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button class="nav-category-tab active" data-category="all">
+                    {i18n(I18nKey.navigationAll)}
+                </button>
+                {categories.map(category => (
+                    <button class="nav-category-tab" data-category={category}>
+                        {category}
+                    </button>
+                ))}
+            </div>
+
+            <!-- Pinned Links -->
+            {pinnedLinks.length > 0 && (
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-(--primary)" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"></path>
+                        </svg>
+                        {i18n(I18nKey.navigationPinned)}
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {pinnedLinks.map(link => (
+                            <a href={link.url} target="_blank" rel="noopener noreferrer"
+                               class="nav-card pinned group flex flex-col items-center p-4 rounded-xl border transition-all duration-300 text-center"
+                               data-title={link.title.toLowerCase()}
+                               data-category={link.category?.toLowerCase() || ''}
+                               data-tags={link.tags?.join(',').toLowerCase() || ''}>
+                                <div class="icon-wrapper w-12 h-12 shrink-0 flex items-center justify-center rounded-full mb-3 transition-all duration-300 text-lg">
+                                    {link.icon ? (
+                                        <iconify-icon icon={link.icon} width="24" height="24"></iconify-icon>
+                                    ) : (
+                                        <span class="text-base font-bold">{link.title.charAt(0).toUpperCase()}</span>
+                                    )}
+                                </div>
+                                <h3 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors duration-300 truncate w-full">
+                                    {link.title}
+                                </h3>
+                                {link.description && (
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-1 w-full">
+                                        {link.description}
+                                    </p>
+                                )}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <!-- Categorized Links -->
+            {allLinks.length > 0 ? (
+                <div id="nav-links-container">
+                    {Object.entries(groupedLinks).map(([category, links]) => (
+                        <div class="nav-category-group mb-8" data-group-category={category}>
+                            <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200 mb-4">
+                                {category === 'uncategorized' ? i18n(I18nKey.navigationUncategorized) : category}
+                                <span class="text-sm font-normal text-neutral-400 ml-2">({links.length})</span>
+                            </h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {links.map(link => (
+                                    <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                       class="nav-card group flex items-center p-4 rounded-xl border transition-all duration-300 gap-3"
+                                       data-title={link.title.toLowerCase()}
+                                       data-category={link.category?.toLowerCase() || ''}
+                                       data-tags={link.tags?.join(',').toLowerCase() || ''}>
+                                        <div class="icon-wrapper w-10 h-10 shrink-0 flex items-center justify-center rounded-lg transition-all duration-300">
+                                            {link.icon ? (
+                                                <iconify-icon icon={link.icon} width="20" height="20"></iconify-icon>
+                                            ) : (
+                                                <span class="text-sm font-bold">{link.title.charAt(0).toUpperCase()}</span>
+                                            )}
+                                        </div>
+                                        <div class="flex flex-col overflow-hidden min-w-0">
+                                            <h3 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors duration-300 truncate">
+                                                {link.title}
+                                            </h3>
+                                            {link.description && (
+                                                <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
+                                                    {link.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div class="text-center py-12 text-neutral-400">
+                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                    </svg>
+                    <p class="text-lg">{i18n(I18nKey.navigationEmpty)}</p>
+                </div>
+            )}
+
+            <!-- Import Modal -->
+            <div id="import-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="import-modal-overlay"></div>
+                <div class="relative bg-white dark:bg-neutral-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+                    <h3 class="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+                        {i18n(I18nKey.navigationImportBookmarks)}
+                    </h3>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+                        Upload a bookmarks HTML file exported from your browser to import navigation links.
+                    </p>
+                    <div id="import-drop-zone" class="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-xl p-8 text-center cursor-pointer hover:border-(--primary) transition-colors duration-200">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+                            Drag & drop your bookmarks HTML file here, or click to browse
+                        </p>
+                    </div>
+                    <div id="import-result" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button id="import-modal-close" class="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</GridLayout>
+
+<style>
+    .nav-tool-btn {
+        background-color: color-mix(in oklch, var(--primary), transparent 90%);
+        color: var(--primary);
+        border: 1px solid color-mix(in oklch, var(--primary), transparent 80%);
+    }
+    .nav-tool-btn:hover {
+        background-color: color-mix(in oklch, var(--primary), transparent 80%);
+    }
+
+    .nav-category-tab {
+        padding: 0.375rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid var(--line-divider);
+        color: var(--text-secondary, #6b7280);
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .nav-category-tab:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .nav-category-tab.active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .nav-card {
+        cursor: pointer;
+        background-color: transparent;
+        border-color: var(--line-divider);
+    }
+    .nav-card:hover {
+        background-color: color-mix(in oklch, var(--primary), transparent 95%);
+        border-color: var(--primary);
+        box-shadow: 0 0 20px color-mix(in oklch, var(--primary), transparent 80%);
+        translate: 0 -2px;
+    }
+
+    .icon-wrapper {
+        background-color: color-mix(in oklch, var(--primary), transparent 85%);
+        color: var(--primary);
+    }
+    .nav-card:hover .icon-wrapper {
+        background-color: var(--primary);
+        color: white;
+        box-shadow: 0 0 12px color-mix(in oklch, var(--primary), transparent 50%);
+    }
+
+    .nav-card.pinned {
+        border-color: color-mix(in oklch, var(--primary), transparent 70%);
+    }
+</style>
+
+<script>
+    // Search functionality
+    function initNavSearch() {
+        const searchInput = document.getElementById('nav-search') as HTMLInputElement;
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.nav-card') as NodeListOf<HTMLElement>;
+            const categoryGroups = document.querySelectorAll('.nav-category-group') as NodeListOf<HTMLElement>;
+
+            cards.forEach(card => {
+                const title = card.dataset.title || '';
+                const category = card.dataset.category || '';
+                const tags = card.dataset.tags || '';
+                const match = !query || title.includes(query) || category.includes(query) || tags.includes(query);
+                card.style.display = match ? '' : 'none';
+            });
+
+            // Hide category groups that have no visible cards
+            categoryGroups.forEach(group => {
+                const visibleCards = group.querySelectorAll('.nav-card:not([style*="display: none"])');
+                group.style.display = visibleCards.length > 0 ? '' : 'none';
+            });
+        });
+    }
+
+    // Category filter
+    function initCategoryFilter() {
+        const tabs = document.querySelectorAll('.nav-category-tab') as NodeListOf<HTMLElement>;
+        const categoryGroups = document.querySelectorAll('.nav-category-group') as NodeListOf<HTMLElement>;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const selectedCategory = tab.dataset.category || 'all';
+
+                categoryGroups.forEach(group => {
+                    const groupCategory = group.dataset.groupCategory || '';
+                    if (selectedCategory === 'all') {
+                        group.style.display = '';
+                    } else {
+                        group.style.display = groupCategory === selectedCategory ? '' : 'none';
+                    }
+                });
+            });
+        });
+    }
+
+    // Import bookmarks modal
+    function initImportBookmarks() {
+        const importBtn = document.getElementById('import-bookmarks-btn');
+        const modal = document.getElementById('import-modal');
+        const overlay = document.getElementById('import-modal-overlay');
+        const closeBtn = document.getElementById('import-modal-close');
+        const dropZone = document.getElementById('import-drop-zone');
+        const fileInput = document.getElementById('bookmark-file-input') as HTMLInputElement;
+        const resultArea = document.getElementById('import-result');
+
+        if (!importBtn || !modal || !overlay || !closeBtn || !dropZone || !fileInput || !resultArea) return;
+
+        const showModal = () => modal.classList.remove('hidden');
+        const hideModal = () => {
+            modal.classList.add('hidden');
+            resultArea.classList.add('hidden');
+        };
+
+        importBtn.addEventListener('click', showModal);
+        overlay.addEventListener('click', hideModal);
+        closeBtn.addEventListener('click', hideModal);
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-(--primary)');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-(--primary)');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-(--primary)');
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                processBookmarkFile(files[0], resultArea);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                processBookmarkFile(fileInput.files[0], resultArea);
+            }
+        });
+    }
+
+    function processBookmarkFile(file: File, resultArea: HTMLElement) {
+        if (!file.name.match(/\.(html|htm)$/i)) {
+            resultArea.classList.remove('hidden');
+            resultArea.className = 'mt-4 p-3 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400';
+            resultArea.textContent = 'Invalid file format. Please upload an HTML bookmark file.';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target?.result as string;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            const links = doc.querySelectorAll('a');
+
+            const bookmarks: Array<{title: string, url: string, category: string}> = [];
+            links.forEach(link => {
+                const title = link.textContent?.trim() || '';
+                const url = link.getAttribute('href') || '';
+                if (title && url && url.startsWith('http')) {
+                    // Try to get category from parent DL/DT structure
+                    let category = '';
+                    let parent = link.parentElement;
+                    while (parent) {
+                        if (parent.tagName === 'DL') {
+                            const prevSibling = parent.previousElementSibling;
+                            if (prevSibling && prevSibling.tagName === 'H3') {
+                                category = prevSibling.textContent?.trim() || '';
+                                break;
+                            }
+                        }
+                        parent = parent.parentElement;
+                    }
+                    bookmarks.push({ title, url, category });
+                }
+            });
+
+            resultArea.classList.remove('hidden');
+            if (bookmarks.length > 0) {
+                resultArea.className = 'mt-4 p-3 rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400';
+                resultArea.innerHTML = `Successfully parsed <strong>${bookmarks.length}</strong> bookmarks. ` +
+                    `<br><small>The parsed bookmarks data has been logged to the console. ` +
+                    `To add them permanently, create JSON files in <code>src/content/navigation/</code>.</small>`;
+                console.log('Parsed bookmarks:', JSON.stringify(bookmarks, null, 2));
+            } else {
+                resultArea.className = 'mt-4 p-3 rounded-lg text-sm bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400';
+                resultArea.textContent = 'No valid bookmarks found in the uploaded file.';
+            }
+        };
+        reader.onerror = () => {
+            resultArea.classList.remove('hidden');
+            resultArea.className = 'mt-4 p-3 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400';
+            resultArea.textContent = 'Error reading the file. Please try again.';
+        };
+        reader.readAsText(file);
+    }
+
+    // Export navigation data
+    function initExport() {
+        const exportBtn = document.getElementById('export-btn');
+        if (!exportBtn) return;
+
+        exportBtn.addEventListener('click', () => {
+            const cards = document.querySelectorAll('.nav-card') as NodeListOf<HTMLElement>;
+            const data: Array<{title: string, url: string, category: string}> = [];
+
+            cards.forEach(card => {
+                const anchor = card as HTMLAnchorElement;
+                const titleEl = card.querySelector('h3');
+                data.push({
+                    title: titleEl?.textContent?.trim() || '',
+                    url: anchor.href || '',
+                    category: card.dataset.category || '',
+                });
+            });
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'navigation-export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    // Initialize all
+    function initNavigation() {
+        initNavSearch();
+        initCategoryFilter();
+        initImportBookmarks();
+        initExport();
+    }
+
+    // Run on page load and after Swup page transitions
+    document.addEventListener('DOMContentLoaded', initNavigation);
+    document.addEventListener('swup:contentReplaced', initNavigation);
+</script>
