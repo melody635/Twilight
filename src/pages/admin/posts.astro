@@ -1,0 +1,324 @@
+---
+export const prerender = false;
+import { validateSession } from "@utils/auth";
+
+const token = Astro.cookies.get("admin_session")?.value ?? "";
+const username = validateSession(token);
+if (!username) {
+  return Astro.redirect("/admin/login/");
+}
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文章管理 - Twilight Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+    .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .admin-header h1 { font-size: 20px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a, .header-right button { color: #fff; text-decoration: none; font-size: 14px; background: rgba(255,255,255,0.2); border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+    .header-right a:hover, .header-right button:hover { background: rgba(255,255,255,0.3); }
+    .admin-nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+    .admin-nav a { padding: 14px 20px; text-decoration: none; color: #666; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .admin-nav a:hover { color: #667eea; background: #f8f9ff; }
+    .admin-nav a.active { color: #667eea; border-bottom-color: #667eea; }
+    .admin-content { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .toolbar h2 { font-size: 20px; color: #333; }
+    .btn { padding: 8px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-primary:hover { background: #5a6fd6; }
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-sm { padding: 4px 12px; font-size: 12px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #fafafa; padding: 12px 16px; text-align: left; font-size: 13px; color: #666; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
+    td { padding: 12px 16px; font-size: 14px; color: #333; border-bottom: 1px solid #f5f5f5; }
+    tr:hover { background: #fafbff; }
+    .tag { display: inline-block; padding: 2px 8px; background: #f0f0f0; border-radius: 4px; font-size: 11px; color: #666; margin: 1px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-green { background: #e8f5e9; color: #2e7d32; }
+    .badge-gray { background: #f0f0f0; color: #666; }
+    .badge-blue { background: #e3f2fd; color: #1565c0; }
+    .actions { display: flex; gap: 6px; }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 32px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group textarea:focus { border-color: #667eea; }
+    .form-group textarea { min-height: 200px; font-family: 'JetBrains Mono', monospace; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .btn-cancel { background: #f0f0f0; color: #666; }
+    .btn-cancel:hover { background: #e0e0e0; }
+    .empty-state { text-align: center; padding: 48px; color: #999; }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>🌙 Twilight Admin</h1>
+    <div class="header-right">
+      <a href="/admin/">← 返回仪表盘</a>
+      <button id="logoutBtn">退出登录</button>
+    </div>
+  </header>
+  <nav class="admin-nav">
+    <a href="/admin/">仪表盘</a>
+    <a href="/admin/posts/" class="active">文章管理</a>
+    <a href="/admin/content/?type=projects">项目管理</a>
+    <a href="/admin/content/?type=skills">技能管理</a>
+    <a href="/admin/content/?type=timeline">时间线</a>
+    <a href="/admin/content/?type=diary">日记管理</a>
+    <a href="/admin/content/?type=albums">相册管理</a>
+    <a href="/admin/content/?type=friends">友链管理</a>
+    <a href="/admin/content/?type=navigation">导航管理</a>
+    <a href="/admin/users/">用户管理</a>
+  </nav>
+  <div class="admin-content">
+    <div class="toolbar">
+      <h2>📝 文章管理</h2>
+      <button class="btn btn-primary" id="addBtn">+ 新建文章</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>标题</th>
+            <th>分类</th>
+            <th>标签</th>
+            <th>发布日期</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="postsTable">
+          <tr><td colspan="6" class="empty-state">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3 id="modalTitle">新建文章</h3>
+      <input type="hidden" id="editMode" value="create" />
+      <input type="hidden" id="originalId" value="" />
+      <div class="form-group">
+        <label>文章ID (slug)</label>
+        <input type="text" id="postId" placeholder="my-post-slug" />
+      </div>
+      <div class="form-group">
+        <label>标题 *</label>
+        <input type="text" id="postTitle" placeholder="文章标题" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>发布日期 *</label>
+          <input type="datetime-local" id="postDate" />
+        </div>
+        <div class="form-group">
+          <label>更新日期</label>
+          <input type="datetime-local" id="postUpdated" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类</label>
+          <input type="text" id="postCategory" placeholder="例如: 技术" />
+        </div>
+        <div class="form-group">
+          <label>标签 (逗号分隔)</label>
+          <input type="text" id="postTags" placeholder="tag1, tag2" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>描述</label>
+        <input type="text" id="postDesc" placeholder="文章简短描述" />
+      </div>
+      <div class="form-group">
+        <label>封面图片URL</label>
+        <input type="text" id="postCover" placeholder="https://..." />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>草稿</label>
+          <select id="postDraft"><option value="false">否</option><option value="true">是</option></select>
+        </div>
+        <div class="form-group">
+          <label>置顶</label>
+          <select id="postPinned"><option value="false">否</option><option value="true">是</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>正文 (Markdown)</label>
+        <textarea id="postContent" placeholder="在此输入Markdown内容..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout/', { method: 'POST' });
+      window.location.href = '/admin/login/';
+    });
+
+    let postsData = [];
+
+    async function loadPosts() {
+      try {
+        const res = await fetch('/api/admin/posts/');
+        const data = await res.json();
+        if (data.success) {
+          postsData = data.posts;
+          renderPosts();
+        }
+      } catch { document.getElementById('postsTable').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>'; }
+    }
+
+    function renderPosts() {
+      const tbody = document.getElementById('postsTable');
+      if (postsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无文章</td></tr>';
+        return;
+      }
+      tbody.innerHTML = postsData.map(p => {
+        const tags = (p.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+        let cat = '-';
+        if (p.category) {
+          if (typeof p.category === 'string') cat = p.category;
+          else if (Array.isArray(p.category)) cat = JSON.stringify(p.category);
+          else cat = String(p.category);
+        }
+        const date = p.published ? new Date(p.published).toLocaleDateString('zh-CN') : '-';
+        const status = p.draft ? '<span class="badge badge-gray">草稿</span>' : '<span class="badge badge-green">已发布</span>';
+        const pinned = p.pinned ? ' <span class="badge badge-blue">置顶</span>' : '';
+        return `<tr>
+          <td><strong>${p.title || p.id}</strong></td>
+          <td>${cat}</td>
+          <td>${tags || '-'}</td>
+          <td>${date}</td>
+          <td>${status}${pinned}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-primary" onclick="editPost('${p.id}')">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePost('${p.id}')">删除</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Modal
+    const modal = document.getElementById('editModal');
+    document.getElementById('addBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = '新建文章';
+      document.getElementById('editMode').value = 'create';
+      document.getElementById('originalId').value = '';
+      document.getElementById('postId').value = '';
+      document.getElementById('postId').disabled = false;
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postDate').value = new Date().toISOString().slice(0, 16);
+      document.getElementById('postUpdated').value = '';
+      document.getElementById('postCategory').value = '';
+      document.getElementById('postTags').value = '';
+      document.getElementById('postDesc').value = '';
+      document.getElementById('postCover').value = '';
+      document.getElementById('postDraft').value = 'false';
+      document.getElementById('postPinned').value = 'false';
+      document.getElementById('postContent').value = '';
+      modal.classList.add('show');
+    });
+    document.getElementById('cancelBtn').addEventListener('click', () => modal.classList.remove('show'));
+
+    window.editPost = async function(id) {
+      try {
+        const res = await fetch(`/api/admin/posts/?id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+        const post = data.posts?.find(p => p.id === id);
+        if (!post) { alert('文章未找到'); return; }
+
+        // Fetch full content
+        document.getElementById('modalTitle').textContent = '编辑文章';
+        document.getElementById('editMode').value = 'edit';
+        document.getElementById('originalId').value = id;
+        document.getElementById('postId').value = id;
+        document.getElementById('postId').disabled = true;
+        document.getElementById('postTitle').value = post.title || '';
+        document.getElementById('postDate').value = post.published ? new Date(post.published).toISOString().slice(0, 16) : '';
+        document.getElementById('postUpdated').value = post.updated ? new Date(post.updated).toISOString().slice(0, 16) : '';
+        document.getElementById('postCategory').value = Array.isArray(post.category) ? post.category.join('/') : (post.category || '');
+        document.getElementById('postTags').value = (post.tags || []).join(', ');
+        document.getElementById('postDesc').value = post.description || '';
+        document.getElementById('postCover').value = post.cover || '';
+        document.getElementById('postDraft').value = post.draft ? 'true' : 'false';
+        document.getElementById('postPinned').value = post.pinned ? 'true' : 'false';
+        document.getElementById('postContent').value = post.content || '';
+        modal.classList.add('show');
+      } catch { alert('加载文章失败'); }
+    };
+
+    window.deletePost = async function(id) {
+      if (!confirm(`确定要删除文章 "${id}" 吗？`)) return;
+      try {
+        const res = await fetch('/api/admin/posts/', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        const data = await res.json();
+        if (data.success) loadPosts();
+        else alert(data.error || '删除失败');
+      } catch { alert('删除失败'); }
+    };
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const mode = document.getElementById('editMode').value;
+      const id = document.getElementById('postId').value.trim();
+      const title = document.getElementById('postTitle').value.trim();
+      const published = document.getElementById('postDate').value;
+      if (!id || !title || !published) { alert('请填写必填字段 (ID, 标题, 发布日期)'); return; }
+
+      const frontmatter = {
+        title,
+        published: new Date(published).toISOString(),
+        description: document.getElementById('postDesc').value || '',
+        cover: document.getElementById('postCover').value || '',
+        category: document.getElementById('postCategory').value || '',
+        tags: document.getElementById('postTags').value.split(',').map(t => t.trim()).filter(Boolean),
+        draft: document.getElementById('postDraft').value === 'true',
+        pinned: document.getElementById('postPinned').value === 'true',
+      };
+      const updated = document.getElementById('postUpdated').value;
+      if (updated) frontmatter.updated = new Date(updated).toISOString();
+      const content = document.getElementById('postContent').value;
+
+      try {
+        const res = await fetch('/api/admin/posts/', {
+          method: mode === 'edit' ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, frontmatter, content }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          modal.classList.remove('show');
+          loadPosts();
+        } else { alert(data.error || '保存失败'); }
+      } catch { alert('保存失败'); }
+    });
+
+    loadPosts();
+  </script>
+</body>
+</html>

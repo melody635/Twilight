@@ -1,0 +1,125 @@
+---
+export const prerender = false;
+import { validateSession } from "@utils/auth";
+
+const token = Astro.cookies.get("admin_session")?.value ?? "";
+const username = validateSession(token);
+if (!username) {
+  return Astro.redirect("/admin/login/");
+}
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台管理 - Twilight Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+    .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .admin-header h1 { font-size: 20px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right span { font-size: 14px; opacity: 0.9; }
+    .header-right a, .header-right button { color: #fff; text-decoration: none; font-size: 14px; background: rgba(255,255,255,0.2); border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .header-right a:hover, .header-right button:hover { background: rgba(255,255,255,0.3); }
+    .admin-nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+    .admin-nav a { padding: 14px 20px; text-decoration: none; color: #666; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+    .admin-nav a:hover { color: #667eea; background: #f8f9ff; }
+    .admin-nav a.active { color: #667eea; border-bottom-color: #667eea; }
+    .admin-content { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stat-card .stat-label { font-size: 13px; color: #999; margin-bottom: 8px; }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #333; }
+    .stat-card .stat-icon { font-size: 32px; float: right; opacity: 0.3; }
+    .section-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .section-card h3 { font-size: 16px; color: #333; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+    .content-link { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 8px; text-decoration: none; color: #333; transition: background 0.2s; margin-bottom: 4px; }
+    .content-link:hover { background: #f8f9ff; }
+    .content-link .link-icon { font-size: 24px; margin-right: 12px; }
+    .content-link .link-text { flex: 1; }
+    .content-link .link-text h4 { font-size: 15px; margin-bottom: 2px; }
+    .content-link .link-text p { font-size: 12px; color: #999; }
+    .content-link .link-arrow { color: #ccc; font-size: 18px; }
+    .quick-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>🌙 Twilight Admin</h1>
+    <div class="header-right">
+      <span>欢迎, {username}</span>
+      <a href="/" target="_blank">访问前台</a>
+      <button id="logoutBtn">退出登录</button>
+    </div>
+  </header>
+  <nav class="admin-nav">
+    <a href="/admin/" class="active">仪表盘</a>
+    <a href="/admin/posts/">文章管理</a>
+    <a href="/admin/content/?type=projects">项目管理</a>
+    <a href="/admin/content/?type=skills">技能管理</a>
+    <a href="/admin/content/?type=timeline">时间线</a>
+    <a href="/admin/content/?type=diary">日记管理</a>
+    <a href="/admin/content/?type=albums">相册管理</a>
+    <a href="/admin/content/?type=friends">友链管理</a>
+    <a href="/admin/content/?type=navigation">导航管理</a>
+    <a href="/admin/users/">用户管理</a>
+  </nav>
+  <div class="admin-content">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-label">文章</div><div class="stat-value" id="statPosts">-</div></div>
+      <div class="stat-card"><div class="stat-icon">🚀</div><div class="stat-label">项目</div><div class="stat-value" id="statProjects">-</div></div>
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-label">技能</div><div class="stat-value" id="statSkills">-</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">友链</div><div class="stat-value" id="statFriends">-</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">时间线</div><div class="stat-value" id="statTimeline">-</div></div>
+      <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-label">日记</div><div class="stat-value" id="statDiary">-</div></div>
+    </div>
+    <div class="quick-links">
+      <div class="section-card">
+        <h3>📄 内容管理</h3>
+        <a class="content-link" href="/admin/posts/"><span class="link-icon">📝</span><span class="link-text"><h4>文章管理</h4><p>管理博客文章的创建、编辑和删除</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=projects"><span class="link-icon">🚀</span><span class="link-text"><h4>项目管理</h4><p>管理作品集和项目展示</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=skills"><span class="link-icon">⚡</span><span class="link-text"><h4>技能管理</h4><p>管理技能展示和评级</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=timeline"><span class="link-icon">📅</span><span class="link-text"><h4>时间线</h4><p>管理时间线事件</p></span><span class="link-arrow">→</span></a>
+      </div>
+      <div class="section-card">
+        <h3>🔧 其他管理</h3>
+        <a class="content-link" href="/admin/content/?type=diary"><span class="link-icon">📖</span><span class="link-text"><h4>日记管理</h4><p>管理日记和动态</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=albums"><span class="link-icon">🖼️</span><span class="link-text"><h4>相册管理</h4><p>管理照片相册</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=friends"><span class="link-icon">👥</span><span class="link-text"><h4>友链管理</h4><p>管理友情链接</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/content/?type=navigation"><span class="link-icon">🔗</span><span class="link-text"><h4>导航管理</h4><p>管理外部导航链接</p></span><span class="link-arrow">→</span></a>
+        <a class="content-link" href="/admin/users/"><span class="link-icon">👤</span><span class="link-text"><h4>用户管理</h4><p>管理管理员账号</p></span><span class="link-arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+  <script is:inline>
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout/', { method: 'POST' });
+      window.location.href = '/admin/login/';
+    });
+    // Load stats
+    async function loadStats() {
+      try {
+        const [postsRes, ...contentRes] = await Promise.all([
+          fetch('/api/admin/posts/'),
+          fetch('/api/admin/content/?type=projects'),
+          fetch('/api/admin/content/?type=skills'),
+          fetch('/api/admin/content/?type=friends'),
+          fetch('/api/admin/content/?type=timeline'),
+          fetch('/api/admin/content/?type=diary'),
+        ]);
+        const postsData = await postsRes.json();
+        const [projectsData, skillsData, friendsData, timelineData, diaryData] = await Promise.all(contentRes.map(r => r.json()));
+        document.getElementById('statPosts').textContent = postsData.success ? postsData.posts.length : '0';
+        document.getElementById('statProjects').textContent = projectsData.success ? projectsData.items.length : '0';
+        document.getElementById('statSkills').textContent = skillsData.success ? skillsData.items.length : '0';
+        document.getElementById('statFriends').textContent = friendsData.success ? friendsData.items.length : '0';
+        document.getElementById('statTimeline').textContent = timelineData.success ? timelineData.items.length : '0';
+        document.getElementById('statDiary').textContent = diaryData.success ? diaryData.items.length : '0';
+      } catch { /* ignore */ }
+    }
+    loadStats();
+  </script>
+</body>
+</html>

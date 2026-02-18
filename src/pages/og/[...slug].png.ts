@@ -1,3 +1,5 @@
+export const prerender = true;
+
 import { getCollection } from "astro:content";
 import type { APIContext, GetStaticPaths } from "astro";
 import type { CollectionEntry } from "astro:content";
@@ -18,7 +20,6 @@ interface FontOptions {
     style?: FontStyle;
     lang?: string;
 }
-export const prerender = true;
 
 export const getStaticPaths: GetStaticPaths = async () => {
     if (!siteConfig.generateOgImages) {

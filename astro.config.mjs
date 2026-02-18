@@ -5,6 +5,7 @@ import svelte, { vitePreprocess } from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import sitemap from "@astrojs/sitemap";
+import node from "@astrojs/node";
 import cloudflarePages from "@astrojs/cloudflare";
 import edgeone from "@edgeone/astro";
 import vercel from "@astrojs/vercel";
@@ -34,25 +35,27 @@ import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
 
 // Choose adapter depending on deployment environment
-const adapter = process.env.GITHUB_ACTIONS
-    ? undefined
-    : (process.env.CF_PAGES
-        ? cloudflarePages()
-        : (process.env.EDGEONE
-            ? edgeone()
-            : vercel({ mode: "serverless" })));
+const adapter = process.env.CF_PAGES
+    ? cloudflarePages()
+    : (process.env.EDGEONE
+        ? edgeone()
+        : (process.env.VERCEL
+            ? vercel({ mode: "serverless" })
+            : node({ mode: "standalone" })));
 
 // Ref: https://astro.build/config
 export default defineConfig({
     site: siteConfig.siteURL,
     base: "/",
     trailingSlash: "always",
+    output: "server",
     adapter: adapter,
     integrations: [
-        decapCmsOauth({
-            decapCMSVersion: "3.9.0",
-            oauthDisabled: true, // Disable it to use oauth, requires .env configuration
-        }),
+        // decapCmsOauth disabled - using custom admin panel instead
+        // decapCmsOauth({
+        //     decapCMSVersion: "3.9.0",
+        //     oauthDisabled: true,
+        // }),
         swup({
             theme: false,
             animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector

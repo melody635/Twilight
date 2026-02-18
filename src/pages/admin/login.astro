@@ -1,0 +1,74 @@
+---
+export const prerender = false;
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员登录 - Twilight Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-card { background: #fff; border-radius: 16px; padding: 48px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); width: 100%; max-width: 420px; }
+    .login-card h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 8px; }
+    .login-card p { text-align: center; color: #888; font-size: 14px; margin-bottom: 32px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; font-weight: 500; }
+    .form-group input { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; transition: border-color 0.2s; outline: none; }
+    .form-group input:focus { border-color: #667eea; }
+    .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .login-btn:hover { opacity: 0.9; }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error-msg { color: #e74c3c; text-align: center; font-size: 14px; margin-top: 16px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>🌙 Twilight Admin</h1>
+    <p>后台管理系统登录</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" placeholder="请输入用户名" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" placeholder="请输入密码" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">登 录</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </form>
+  </div>
+  <script is:inline>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      btn.disabled = true;
+      btn.textContent = '登录中...';
+      errorMsg.textContent = '';
+      try {
+        const res = await fetch('/api/auth/login/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = '/admin/';
+        } else {
+          errorMsg.textContent = data.error || '登录失败';
+        }
+      } catch {
+        errorMsg.textContent = '网络错误，请重试';
+      }
+      btn.disabled = false;
+      btn.textContent = '登 录';
+    });
+  </script>
+</body>
+</html>

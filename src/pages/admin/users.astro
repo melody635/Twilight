@@ -1,0 +1,252 @@
+---
+export const prerender = false;
+import { validateSession, getUserByUsername } from "@utils/auth";
+
+const token = Astro.cookies.get("admin_session")?.value ?? "";
+const username = validateSession(token);
+if (!username) {
+  return Astro.redirect("/admin/login/");
+}
+
+// Only admins can access user management
+const currentUser = getUserByUsername(username);
+if (!currentUser || currentUser.role !== "admin") {
+  return Astro.redirect("/admin/");
+}
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户管理 - Twilight Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+    .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .admin-header h1 { font-size: 20px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a, .header-right button { color: #fff; text-decoration: none; font-size: 14px; background: rgba(255,255,255,0.2); border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+    .header-right a:hover, .header-right button:hover { background: rgba(255,255,255,0.3); }
+    .admin-nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+    .admin-nav a { padding: 14px 20px; text-decoration: none; color: #666; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .admin-nav a:hover { color: #667eea; background: #f8f9ff; }
+    .admin-nav a.active { color: #667eea; border-bottom-color: #667eea; }
+    .admin-content { max-width: 800px; margin: 24px auto; padding: 0 24px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .toolbar h2 { font-size: 20px; color: #333; }
+    .btn { padding: 8px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-primary:hover { background: #5a6fd6; }
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-sm { padding: 4px 12px; font-size: 12px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #fafafa; padding: 12px 16px; text-align: left; font-size: 13px; color: #666; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
+    td { padding: 12px 16px; font-size: 14px; color: #333; border-bottom: 1px solid #f5f5f5; }
+    tr:hover { background: #fafbff; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .badge-admin { background: #e8eaf6; color: #3949ab; }
+    .badge-user { background: #e8f5e9; color: #2e7d32; }
+    .actions { display: flex; gap: 6px; }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 32px; width: 90%; max-width: 420px; }
+    .modal h3 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: #667eea; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .btn-cancel { background: #f0f0f0; color: #666; }
+    .btn-cancel:hover { background: #e0e0e0; }
+    .hint { font-size: 12px; color: #999; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>🌙 Twilight Admin</h1>
+    <div class="header-right">
+      <a href="/admin/">← 返回仪表盘</a>
+      <button id="logoutBtn">退出登录</button>
+    </div>
+  </header>
+  <nav class="admin-nav">
+    <a href="/admin/">仪表盘</a>
+    <a href="/admin/posts/">文章管理</a>
+    <a href="/admin/content/?type=projects">项目管理</a>
+    <a href="/admin/content/?type=skills">技能管理</a>
+    <a href="/admin/content/?type=timeline">时间线</a>
+    <a href="/admin/content/?type=diary">日记管理</a>
+    <a href="/admin/content/?type=albums">相册管理</a>
+    <a href="/admin/content/?type=friends">友链管理</a>
+    <a href="/admin/content/?type=navigation">导航管理</a>
+    <a href="/admin/users/" class="active">用户管理</a>
+  </nav>
+  <div class="admin-content">
+    <div class="toolbar">
+      <h2>👤 用户管理</h2>
+      <button class="btn btn-primary" id="addBtn">+ 新建用户</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>用户名</th>
+            <th>角色</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable">
+          <tr><td colspan="4" style="text-align:center;padding:24px;color:#999">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3 id="modalTitle">新建用户</h3>
+      <input type="hidden" id="editMode" value="create" />
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="userUsername" placeholder="请输入用户名" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="userPassword" placeholder="请输入密码" autocomplete="new-password" />
+        <div class="hint" id="pwdHint" style="display:none">留空表示不修改密码</div>
+      </div>
+      <div class="form-group">
+        <label>角色</label>
+        <select id="userRole">
+          <option value="admin">管理员 (admin)</option>
+          <option value="editor">编辑者 (editor)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ currentUsername: username }}>
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout/', { method: 'POST' });
+      window.location.href = '/admin/login/';
+    });
+
+    let usersData = [];
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users/');
+        const data = await res.json();
+        if (data.success) {
+          usersData = data.users;
+          renderUsers();
+        }
+      } catch { document.getElementById('usersTable').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#999">加载失败</td></tr>'; }
+    }
+
+    function renderUsers() {
+      const tbody = document.getElementById('usersTable');
+      if (usersData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#999">暂无用户</td></tr>';
+        return;
+      }
+      tbody.innerHTML = usersData.map(u => {
+        const badge = u.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-user">编辑者</span>';
+        const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-CN') : '-';
+        const isSelf = u.username === currentUsername;
+        return `<tr>
+          <td><strong>${u.username}</strong>${isSelf ? ' (当前)' : ''}</td>
+          <td>${badge}</td>
+          <td>${date}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-primary" onclick="editUser('${u.username}')">编辑</button>
+            ${!isSelf ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.username}')">删除</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    const modal = document.getElementById('editModal');
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = '新建用户';
+      document.getElementById('editMode').value = 'create';
+      document.getElementById('userUsername').value = '';
+      document.getElementById('userUsername').disabled = false;
+      document.getElementById('userPassword').value = '';
+      document.getElementById('userPassword').placeholder = '请输入密码';
+      document.getElementById('userRole').value = 'editor';
+      document.getElementById('pwdHint').style.display = 'none';
+      modal.classList.add('show');
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => modal.classList.remove('show'));
+
+    window.editUser = function(username) {
+      const user = usersData.find(u => u.username === username);
+      if (!user) return;
+      document.getElementById('modalTitle').textContent = '编辑用户: ' + username;
+      document.getElementById('editMode').value = 'edit';
+      document.getElementById('userUsername').value = username;
+      document.getElementById('userUsername').disabled = true;
+      document.getElementById('userPassword').value = '';
+      document.getElementById('userPassword').placeholder = '留空不修改';
+      document.getElementById('userRole').value = user.role || 'editor';
+      document.getElementById('pwdHint').style.display = 'block';
+      modal.classList.add('show');
+    };
+
+    window.deleteUser = async function(username) {
+      if (!confirm(`确定要删除用户 "${username}" 吗？`)) return;
+      try {
+        const res = await fetch('/api/admin/users/', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const data = await res.json();
+        if (data.success) loadUsers();
+        else alert(data.error || '删除失败');
+      } catch { alert('删除失败'); }
+    };
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const mode = document.getElementById('editMode').value;
+      const username = document.getElementById('userUsername').value.trim();
+      const password = document.getElementById('userPassword').value;
+      const role = document.getElementById('userRole').value;
+
+      if (!username) { alert('请输入用户名'); return; }
+      if (mode === 'create' && !password) { alert('请输入密码'); return; }
+
+      try {
+        const body = { username, role };
+        if (password) body.password = password;
+
+        const res = await fetch('/api/admin/users/', {
+          method: mode === 'edit' ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          modal.classList.remove('show');
+          loadUsers();
+        } else { alert(data.error || '保存失败'); }
+      } catch { alert('保存失败'); }
+    });
+
+    loadUsers();
+  </script>
+</body>
+</html>

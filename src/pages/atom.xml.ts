@@ -1,3 +1,5 @@
+export const prerender = true;
+
 import { getImage } from "astro:assets";
 import { parse as htmlParser } from "node-html-parser";
 import type { APIContext, ImageMetadata } from "astro";
