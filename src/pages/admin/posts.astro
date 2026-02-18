@@ -197,7 +197,12 @@ if (!username) {
       }
       tbody.innerHTML = postsData.map(p => {
         const tags = (p.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-        const cat = p.category ? (Array.isArray(p.category) ? p.category.join('/') : p.category) : '-';
+        let cat = '-';
+        if (p.category) {
+          if (typeof p.category === 'string') cat = p.category;
+          else if (Array.isArray(p.category)) cat = JSON.stringify(p.category);
+          else cat = String(p.category);
+        }
         const date = p.published ? new Date(p.published).toLocaleDateString('zh-CN') : '-';
         const status = p.draft ? '<span class="badge badge-gray">草稿</span>' : '<span class="badge badge-green">已发布</span>';
         const pinned = p.pinned ? ' <span class="badge badge-blue">置顶</span>' : '';

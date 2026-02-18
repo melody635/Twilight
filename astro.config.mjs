@@ -35,15 +35,13 @@ import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
 
 // Choose adapter depending on deployment environment
-const adapter = process.env.GITHUB_ACTIONS
-    ? undefined
-    : (process.env.CF_PAGES
-        ? cloudflarePages()
-        : (process.env.EDGEONE
-            ? edgeone()
-            : (process.env.VERCEL
-                ? vercel({ mode: "serverless" })
-                : node({ mode: "standalone" }))));
+const adapter = process.env.CF_PAGES
+    ? cloudflarePages()
+    : (process.env.EDGEONE
+        ? edgeone()
+        : (process.env.VERCEL
+            ? vercel({ mode: "serverless" })
+            : node({ mode: "standalone" })));
 
 // Ref: https://astro.build/config
 export default defineConfig({
@@ -53,10 +51,11 @@ export default defineConfig({
     output: "server",
     adapter: adapter,
     integrations: [
-        decapCmsOauth({
-            decapCMSVersion: "3.9.0",
-            oauthDisabled: true, // Disable it to use oauth, requires .env configuration
-        }),
+        // decapCmsOauth disabled - using custom admin panel instead
+        // decapCmsOauth({
+        //     decapCMSVersion: "3.9.0",
+        //     oauthDisabled: true,
+        // }),
         swup({
             theme: false,
             animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector

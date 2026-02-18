@@ -34,8 +34,8 @@ function serializeFrontmatter(frontmatter: Record<string, unknown>, content: str
   return `---\n${yamlStr}\n---\n${content}`;
 }
 
-function readPostsRecursively(dir: string, prefix = ""): { id: string; frontmatter: Record<string, unknown> }[] {
-  const results: { id: string; frontmatter: Record<string, unknown> }[] = [];
+function readPostsRecursively(dir: string, prefix = ""): { id: string; frontmatter: Record<string, unknown>; content: string }[] {
+  const results: { id: string; frontmatter: Record<string, unknown>; content: string }[] = [];
 
   if (!fs.existsSync(dir)) return results;
 
@@ -50,12 +50,12 @@ function readPostsRecursively(dir: string, prefix = ""): { id: string; frontmatt
     } else if (entry.isFile() && entry.name.endsWith(".md")) {
       try {
         const raw = fs.readFileSync(fullPath, "utf-8");
-        const { frontmatter } = parseFrontmatter(raw);
+        const { frontmatter, content } = parseFrontmatter(raw);
         const id = `${prefix}${entry.name.replace(/\.md$/, "")}`;
-        results.push({ id, ...frontmatter } as { id: string; frontmatter: Record<string, unknown> });
+        results.push({ id, ...frontmatter, content } as { id: string; frontmatter: Record<string, unknown>; content: string });
       } catch {
         const id = `${prefix}${entry.name.replace(/\.md$/, "")}`;
-        results.push({ id } as { id: string; frontmatter: Record<string, unknown> });
+        results.push({ id, content: "" } as { id: string; frontmatter: Record<string, unknown>; content: string });
       }
     }
   }

@@ -35,7 +35,7 @@ export async function POST(context: APIContext) {
       httpOnly: true,
       path: "/",
       maxAge: 86400,
-      secure: true,
+      secure: import.meta.env.PROD,
       sameSite: "lax",
     });
 
