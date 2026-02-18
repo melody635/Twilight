@@ -1,0 +1,9 @@
+{
+    "title": "YouTube",
+    "url": "https://www.youtube.com",
+    "icon": "mdi:youtube",
+    "description": "Enjoy videos and music you love",
+    "category": "Media",
+    "pinned": false,
+    "tags": ["video", "entertainment"]
+}

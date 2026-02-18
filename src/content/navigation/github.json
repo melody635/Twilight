@@ -1,0 +1,9 @@
+{
+    "title": "GitHub",
+    "url": "https://github.com",
+    "icon": "mdi:github",
+    "description": "Where the world builds software",
+    "category": "Development",
+    "pinned": true,
+    "tags": ["code", "open-source"]
+}

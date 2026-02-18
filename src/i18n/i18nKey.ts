@@ -185,6 +185,18 @@ enum I18nKey {
     animeEmpty = "animeEmpty",
     animeEmptyBangumi = "animeEmptyBangumi",
 
+    // 个人导航页面
+    navigation = "navigation",
+    navigationSubtitle = "navigationSubtitle",
+    navigationSearch = "navigationSearch",
+    navigationAll = "navigationAll",
+    navigationUncategorized = "navigationUncategorized",
+    navigationAddLink = "navigationAddLink",
+    navigationImportBookmarks = "navigationImportBookmarks",
+    navigationExport = "navigationExport",
+    navigationEmpty = "navigationEmpty",
+    navigationVisit = "navigationVisit",
+
     // 友链页面
     friends = "friends",
 

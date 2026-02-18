@@ -336,6 +336,36 @@ collections:
             - # 标签
                 { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
 
+    - # 个人导航集合
+        # 集合名称
+        name: "navigation"
+        # 后台显示标签
+        label: "Navigation"
+        # 内容存储目录
+        folder: "src/content/navigation"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
+        fields:
+            - # 网站名称
+                { label: "Title", name: "title", widget: "string" }
+            - # 网站链接
+                { label: "URL", name: "url", widget: "string" }
+            - # 图标
+                { label: "Icon", name: "icon", widget: "string", required: false, hint: "Iconify icon name, e.g. mdi:github" }
+            - # 网站描述
+                { label: "Description", name: "description", widget: "text", required: false }
+            - # 分类
+                { label: "Category", name: "category", widget: "string", required: false }
+            - # 是否置顶
+                { label: "Pinned", name: "pinned", widget: "boolean", required: false, default: false }
+            - # 标签
+                { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+
 
 # 编辑器配置
 editor:

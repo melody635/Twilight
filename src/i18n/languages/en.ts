@@ -188,6 +188,18 @@ export const en: Translation = {
     [Key.animeEmpty]: "No anime data",
     [Key.animeEmptyBangumi]: "Please check Bangumi configuration or network connection",
 
+    // Navigation Page
+    [Key.navigation]: "Navigation",
+    [Key.navigationSubtitle]: "My personal navigation and bookmarks",
+    [Key.navigationSearch]: "Search navigation links...",
+    [Key.navigationAll]: "All",
+    [Key.navigationUncategorized]: "Uncategorized",
+    [Key.navigationAddLink]: "Add Link",
+    [Key.navigationImportBookmarks]: "Import Bookmarks",
+    [Key.navigationExport]: "Export",
+    [Key.navigationEmpty]: "No navigation links yet",
+    [Key.navigationVisit]: "Visit",
+
     // Friends Page
     [Key.friends]: "Friends",
 

@@ -1,0 +1,9 @@
+{
+    "title": "Google",
+    "url": "https://www.google.com",
+    "icon": "mdi:google",
+    "description": "Search the world's information",
+    "category": "Search",
+    "pinned": true,
+    "tags": ["search"]
+}
