@@ -1,0 +1,417 @@
+---
+export const prerender = false;
+import { validateSession } from "@utils/auth";
+
+const token = Astro.cookies.get("admin_session")?.value ?? "";
+const username = validateSession(token);
+if (!username) {
+  return Astro.redirect("/admin/login/");
+}
+
+const typeLabels: Record<string, { name: string; icon: string; fields: { key: string; label: string; type: string; required?: boolean }[] }> = {
+  projects: { name: '项目管理', icon: '🚀', fields: [
+    { key: 'title', label: '项目名称', type: 'text', required: true },
+    { key: 'description', label: '描述', type: 'textarea' },
+    { key: 'image', label: '图片URL', type: 'text' },
+    { key: 'category', label: '分类', type: 'text' },
+    { key: 'techStack', label: '技术栈 (逗号分隔)', type: 'text' },
+    { key: 'status', label: '状态', type: 'text' },
+    { key: 'liveDemo', label: '在线演示URL', type: 'text' },
+    { key: 'sourceCode', label: '源代码URL', type: 'text' },
+    { key: 'startDate', label: '开始日期', type: 'date' },
+    { key: 'endDate', label: '结束日期', type: 'date' },
+    { key: 'featured', label: '推荐', type: 'checkbox' },
+    { key: 'tags', label: '标签 (逗号分隔)', type: 'text' },
+  ]},
+  skills: { name: '技能管理', icon: '⚡', fields: [
+    { key: 'name', label: '技能名称', type: 'text', required: true },
+    { key: 'description', label: '描述', type: 'textarea' },
+    { key: 'icon', label: '图标', type: 'text' },
+    { key: 'category', label: '分类', type: 'text' },
+    { key: 'level', label: '等级 (beginner/intermediate/advanced)', type: 'text' },
+    { key: 'experience.years', label: '经验年数', type: 'number' },
+    { key: 'experience.months', label: '经验月数', type: 'number' },
+    { key: 'color', label: '颜色 (#hex)', type: 'text' },
+  ]},
+  timeline: { name: '时间线', icon: '📅', fields: [
+    { key: 'title', label: '标题', type: 'text', required: true },
+    { key: 'description', label: '描述', type: 'textarea' },
+    { key: 'type', label: '类型', type: 'text' },
+    { key: 'startDate', label: '开始日期', type: 'date' },
+    { key: 'endDate', label: '结束日期', type: 'date' },
+    { key: 'icon', label: '图标', type: 'text' },
+    { key: 'color', label: '颜色', type: 'text' },
+    { key: 'featured', label: '推荐', type: 'checkbox' },
+  ]},
+  diary: { name: '日记管理', icon: '📖', fields: [
+    { key: 'title', label: '标题', type: 'text' },
+    { key: 'content', label: '内容', type: 'textarea', required: true },
+    { key: 'date', label: '日期', type: 'datetime-local', required: true },
+    { key: 'images', label: '图片URL (逗号分隔)', type: 'text' },
+  ]},
+  albums: { name: '相册管理', icon: '🖼️', fields: [
+    { key: 'title', label: '相册标题', type: 'text', required: true },
+    { key: 'description', label: '描述', type: 'textarea' },
+    { key: 'cover', label: '封面URL', type: 'text' },
+    { key: 'date', label: '日期', type: 'datetime-local' },
+    { key: 'location', label: '地点', type: 'text' },
+    { key: 'tags', label: '标签 (逗号分隔)', type: 'text' },
+    { key: 'visible', label: '可见', type: 'checkbox' },
+  ]},
+  friends: { name: '友链管理', icon: '👥', fields: [
+    { key: 'title', label: '名称', type: 'text', required: true },
+    { key: 'imgurl', label: '头像URL', type: 'text' },
+    { key: 'desc', label: '描述', type: 'text' },
+    { key: 'siteurl', label: '站点URL', type: 'text', required: true },
+    { key: 'tags', label: '标签 (逗号分隔)', type: 'text' },
+  ]},
+  navigation: { name: '导航管理', icon: '🔗', fields: [
+    { key: 'title', label: '名称', type: 'text', required: true },
+    { key: 'url', label: 'URL', type: 'text', required: true },
+    { key: 'icon', label: '图标', type: 'text' },
+    { key: 'description', label: '描述', type: 'text' },
+    { key: 'category', label: '分类', type: 'text' },
+    { key: 'pinned', label: '置顶', type: 'checkbox' },
+    { key: 'tags', label: '标签 (逗号分隔)', type: 'text' },
+  ]},
+};
+
+const typeConfig = JSON.stringify(typeLabels);
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>内容管理 - Twilight Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+    .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .admin-header h1 { font-size: 20px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right a, .header-right button { color: #fff; text-decoration: none; font-size: 14px; background: rgba(255,255,255,0.2); border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+    .header-right a:hover, .header-right button:hover { background: rgba(255,255,255,0.3); }
+    .admin-nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+    .admin-nav a { padding: 14px 20px; text-decoration: none; color: #666; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .admin-nav a:hover { color: #667eea; background: #f8f9ff; }
+    .admin-nav a.active { color: #667eea; border-bottom-color: #667eea; }
+    .admin-content { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .toolbar h2 { font-size: 20px; color: #333; }
+    .btn { padding: 8px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-primary:hover { background: #5a6fd6; }
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-sm { padding: 4px 12px; font-size: 12px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .item-list { padding: 8px; }
+    .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 8px; margin-bottom: 4px; transition: background 0.2s; }
+    .item-card:hover { background: #f8f9ff; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-info h4 { font-size: 15px; color: #333; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-info p { font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: 12px; }
+    .tag { display: inline-block; padding: 2px 8px; background: #f0f0f0; border-radius: 4px; font-size: 11px; color: #666; margin: 1px; }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 32px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group textarea:focus { border-color: #667eea; }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .form-group input[type="checkbox"] { width: auto; margin-right: 8px; }
+    .checkbox-label { display: flex; align-items: center; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .btn-cancel { background: #f0f0f0; color: #666; }
+    .btn-cancel:hover { background: #e0e0e0; }
+    .empty-state { text-align: center; padding: 48px; color: #999; }
+    /* JSON Editor */
+    .json-editor { width: 100%; min-height: 200px; font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; resize: vertical; }
+    .tab-toggle { display: flex; gap: 0; margin-bottom: 12px; }
+    .tab-toggle button { padding: 8px 16px; border: 1px solid #ddd; background: #f8f8f8; font-size: 13px; cursor: pointer; }
+    .tab-toggle button.active { background: #667eea; color: #fff; border-color: #667eea; }
+    .tab-toggle button:first-child { border-radius: 6px 0 0 6px; }
+    .tab-toggle button:last-child { border-radius: 0 6px 6px 0; }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <h1>🌙 Twilight Admin</h1>
+    <div class="header-right">
+      <a href="/admin/">← 返回仪表盘</a>
+      <button id="logoutBtn">退出登录</button>
+    </div>
+  </header>
+  <nav class="admin-nav">
+    <a href="/admin/">仪表盘</a>
+    <a href="/admin/posts/">文章管理</a>
+    <a href="/admin/content/?type=projects" id="nav-projects">项目管理</a>
+    <a href="/admin/content/?type=skills" id="nav-skills">技能管理</a>
+    <a href="/admin/content/?type=timeline" id="nav-timeline">时间线</a>
+    <a href="/admin/content/?type=diary" id="nav-diary">日记管理</a>
+    <a href="/admin/content/?type=albums" id="nav-albums">相册管理</a>
+    <a href="/admin/content/?type=friends" id="nav-friends">友链管理</a>
+    <a href="/admin/content/?type=navigation" id="nav-navigation">导航管理</a>
+    <a href="/admin/users/">用户管理</a>
+  </nav>
+  <div class="admin-content">
+    <div class="toolbar">
+      <h2 id="pageTitle">内容管理</h2>
+      <button class="btn btn-primary" id="addBtn">+ 新建</button>
+    </div>
+    <div class="card">
+      <div class="item-list" id="itemList">
+        <div class="empty-state">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3 id="modalTitle">新建项目</h3>
+      <input type="hidden" id="editMode" value="create" />
+      <input type="hidden" id="originalId" value="" />
+      <div class="form-group">
+        <label>ID (文件名, 不含.json)</label>
+        <input type="text" id="itemId" placeholder="my-item" />
+      </div>
+      <div class="tab-toggle">
+        <button class="active" id="tabForm" onclick="switchTab('form')">表单编辑</button>
+        <button id="tabJson" onclick="switchTab('json')">JSON编辑</button>
+      </div>
+      <div id="formFields"></div>
+      <div id="jsonEditorWrap" style="display:none">
+        <textarea class="json-editor" id="jsonEditor"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ typeConfig }}>
+    const TYPE_CONFIG = JSON.parse(typeConfig);
+    const params = new URLSearchParams(window.location.search);
+    const currentType = params.get('type') || 'projects';
+    const config = TYPE_CONFIG[currentType] || TYPE_CONFIG.projects;
+
+    // Update active nav
+    const navEl = document.getElementById('nav-' + currentType);
+    if (navEl) navEl.classList.add('active');
+    document.getElementById('pageTitle').textContent = config.icon + ' ' + config.name;
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout/', { method: 'POST' });
+      window.location.href = '/admin/login/';
+    });
+
+    let items = [];
+    let currentTab = 'form';
+
+    window.switchTab = function(tab) {
+      currentTab = tab;
+      document.getElementById('tabForm').classList.toggle('active', tab === 'form');
+      document.getElementById('tabJson').classList.toggle('active', tab === 'json');
+      document.getElementById('formFields').style.display = tab === 'form' ? 'block' : 'none';
+      document.getElementById('jsonEditorWrap').style.display = tab === 'json' ? 'block' : 'none';
+      if (tab === 'json') {
+        document.getElementById('jsonEditor').value = JSON.stringify(getFormData(), null, 2);
+      } else {
+        try {
+          const data = JSON.parse(document.getElementById('jsonEditor').value);
+          setFormData(data);
+        } catch {}
+      }
+    };
+
+    function buildFormFields() {
+      const container = document.getElementById('formFields');
+      container.innerHTML = config.fields.map(f => {
+        if (f.type === 'checkbox') {
+          return `<div class="form-group"><label class="checkbox-label"><input type="checkbox" id="field_${f.key}" /> ${f.label}${f.required ? ' *' : ''}</label></div>`;
+        }
+        if (f.type === 'textarea') {
+          return `<div class="form-group"><label>${f.label}${f.required ? ' *' : ''}</label><textarea id="field_${f.key}"></textarea></div>`;
+        }
+        return `<div class="form-group"><label>${f.label}${f.required ? ' *' : ''}</label><input type="${f.type}" id="field_${f.key}" /></div>`;
+      }).join('');
+    }
+
+    function getNestedValue(obj, key) {
+      return key.split('.').reduce((o, k) => o && o[k], obj);
+    }
+
+    function setNestedValue(obj, key, value) {
+      const keys = key.split('.');
+      let current = obj;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+      }
+      current[keys[keys.length - 1]] = value;
+    }
+
+    function getFormData() {
+      const data = {};
+      for (const f of config.fields) {
+        const el = document.getElementById('field_' + f.key);
+        if (!el) continue;
+        let val;
+        if (f.type === 'checkbox') {
+          val = el.checked;
+        } else if (f.type === 'number') {
+          val = el.value ? Number(el.value) : 0;
+        } else if (f.key === 'tags' || f.key === 'techStack' || f.key === 'images' || f.key === 'skills') {
+          val = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+        } else if (f.type === 'datetime-local' && el.value) {
+          val = new Date(el.value).toISOString();
+        } else {
+          val = el.value;
+        }
+        setNestedValue(data, f.key, val);
+      }
+      return data;
+    }
+
+    function setFormData(data) {
+      for (const f of config.fields) {
+        const el = document.getElementById('field_' + f.key);
+        if (!el) continue;
+        const val = getNestedValue(data, f.key);
+        if (f.type === 'checkbox') {
+          el.checked = !!val;
+        } else if (Array.isArray(val)) {
+          el.value = val.join(', ');
+        } else if (f.type === 'datetime-local' && val) {
+          el.value = new Date(val).toISOString().slice(0, 16);
+        } else if (f.type === 'date' && val) {
+          el.value = val.slice(0, 10);
+        } else {
+          el.value = val ?? '';
+        }
+      }
+    }
+
+    function getItemTitle(item) {
+      return item.data?.title || item.data?.name || item.id;
+    }
+
+    function getItemDesc(item) {
+      return item.data?.description || item.data?.desc || item.data?.content?.slice(0, 80) || '';
+    }
+
+    async function loadItems() {
+      try {
+        const res = await fetch('/api/admin/content/?type=' + currentType);
+        const data = await res.json();
+        if (data.success) {
+          items = data.items;
+          renderItems();
+        }
+      } catch { document.getElementById('itemList').innerHTML = '<div class="empty-state">加载失败</div>'; }
+    }
+
+    function renderItems() {
+      const list = document.getElementById('itemList');
+      if (items.length === 0) {
+        list.innerHTML = '<div class="empty-state">暂无数据</div>';
+        return;
+      }
+      list.innerHTML = items.map(item => `
+        <div class="item-card">
+          <div class="item-info">
+            <h4>${getItemTitle(item)}</h4>
+            <p>${getItemDesc(item)}</p>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-primary" onclick="editItem('${item.id}')">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">删除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const modal = document.getElementById('editModal');
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = '新建' + config.name.replace('管理', '');
+      document.getElementById('editMode').value = 'create';
+      document.getElementById('originalId').value = '';
+      document.getElementById('itemId').value = '';
+      document.getElementById('itemId').disabled = false;
+      buildFormFields();
+      switchTab('form');
+      modal.classList.add('show');
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => modal.classList.remove('show'));
+
+    window.editItem = function(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      document.getElementById('modalTitle').textContent = '编辑: ' + getItemTitle(item);
+      document.getElementById('editMode').value = 'edit';
+      document.getElementById('originalId').value = id;
+      document.getElementById('itemId').value = id;
+      document.getElementById('itemId').disabled = true;
+      buildFormFields();
+      setFormData(item.data || {});
+      document.getElementById('jsonEditor').value = JSON.stringify(item.data || {}, null, 2);
+      switchTab('form');
+      modal.classList.add('show');
+    };
+
+    window.deleteItem = async function(id) {
+      const item = items.find(i => i.id === id);
+      if (!confirm(`确定要删除 "${getItemTitle(item)}" 吗？`)) return;
+      try {
+        const res = await fetch('/api/admin/content/', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: currentType, id }),
+        });
+        const data = await res.json();
+        if (data.success) loadItems();
+        else alert(data.error || '删除失败');
+      } catch { alert('删除失败'); }
+    };
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const mode = document.getElementById('editMode').value;
+      const id = document.getElementById('itemId').value.trim();
+      if (!id) { alert('请填写ID'); return; }
+
+      let data;
+      if (currentTab === 'json') {
+        try { data = JSON.parse(document.getElementById('jsonEditor').value); }
+        catch { alert('JSON格式错误'); return; }
+      } else {
+        data = getFormData();
+      }
+
+      try {
+        const res = await fetch('/api/admin/content/', {
+          method: mode === 'edit' ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: currentType, id, data }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          modal.classList.remove('show');
+          loadItems();
+        } else { alert(result.error || '保存失败'); }
+      } catch { alert('保存失败'); }
+    });
+
+    buildFormFields();
+    loadItems();
+  </script>
+</body>
+</html>
