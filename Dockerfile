@@ -19,7 +19,7 @@ FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 16000
+EXPOSE 80
 
 # Add labels for metadata
 LABEL org.opencontainers.image.source="https://github.com/melody635/Twilight.git"
